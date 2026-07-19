@@ -222,3 +222,5 @@ __marimo__/
 node_modules/
 *.db
 .DS_Store
+# Private Arbeitsnotizen (nicht veröffentlichen)
+PROJECT.md
