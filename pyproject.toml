@@ -18,7 +18,12 @@ dependencies = [
 dev = [
     "pytest>=8.0",
     "httpx>=0.27",
+    "ruff>=0.4",
 ]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
 
 [tool.setuptools]
 packages = ["backend"]
