@@ -23,6 +23,13 @@ MIGRATIONS: list[str] = [
     CREATE INDEX idx_usage_events_timestamp ON usage_events (timestamp);
     CREATE INDEX idx_usage_events_project   ON usage_events (project);
     """,
+    """
+    CREATE TABLE accounts (
+        id         INTEGER PRIMARY KEY,
+        name       TEXT NOT NULL UNIQUE,
+        created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
+    );
+    """,
 ]
 
 
