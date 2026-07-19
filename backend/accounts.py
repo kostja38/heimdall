@@ -23,7 +23,11 @@ def create_account(conn, name: str, api_key: str) -> int:
         cursor = conn.execute("INSERT INTO accounts (name) VALUES (?)", (name,))
     except sqlite3.IntegrityError as exc:
         raise DuplicateAccountError(f"account {name!r} already exists") from exc
-    keyring.set_password(SERVICE_NAME, name, api_key)
+    try:
+        keyring.set_password(SERVICE_NAME, name, api_key)
+    except Exception:
+        conn.rollback()
+        raise
     conn.commit()
     return cursor.lastrowid
 

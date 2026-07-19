@@ -49,3 +49,18 @@ def test_duplicate_name_raises(tmp_path):
     count = conn.execute("SELECT COUNT(*) FROM accounts").fetchone()[0]
     assert count == 1
     assert accounts.get_api_key("client-a") == "key-1"
+
+
+def test_keyring_failure_rolls_back_db_row(tmp_path, monkeypatch):
+    conn = _conn(tmp_path)
+
+    def boom(service, username, password):
+        raise RuntimeError("keychain unavailable")
+
+    monkeypatch.setattr(accounts.keyring, "set_password", boom)
+
+    with pytest.raises(RuntimeError, match="keychain unavailable"):
+        accounts.create_account(conn, "client-a", "sk-ant-admin-test")
+
+    count = conn.execute("SELECT COUNT(*) FROM accounts").fetchone()[0]
+    assert count == 0
