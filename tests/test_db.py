@@ -40,3 +40,29 @@ def test_duplicate_uuid_is_ignored(tmp_path):
 
     count = conn.execute("SELECT COUNT(*) FROM usage_events").fetchone()[0]
     assert count == 1
+
+
+def test_resolve_db_path_prefers_explicit_argument(tmp_path, monkeypatch):
+    monkeypatch.setenv("HEIMDALL_DB", str(tmp_path / "env.db"))
+
+    assert db.resolve_db_path(tmp_path / "arg.db") == tmp_path / "arg.db"
+
+
+def test_resolve_db_path_falls_back_to_env_var(tmp_path, monkeypatch):
+    monkeypatch.setenv("HEIMDALL_DB", str(tmp_path / "env.db"))
+
+    assert db.resolve_db_path(None) == tmp_path / "env.db"
+
+
+def test_resolve_db_path_defaults_to_home_dotfolder(monkeypatch):
+    monkeypatch.delenv("HEIMDALL_DB", raising=False)
+
+    assert db.resolve_db_path(None) == db.DEFAULT_DB_PATH
+
+
+def test_connect_uses_env_var_when_no_argument(tmp_path, monkeypatch):
+    monkeypatch.setenv("HEIMDALL_DB", str(tmp_path / "env.db"))
+
+    db.connect()
+
+    assert (tmp_path / "env.db").exists()
