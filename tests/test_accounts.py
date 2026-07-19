@@ -64,3 +64,44 @@ def test_keyring_failure_rolls_back_db_row(tmp_path, monkeypatch):
 
     count = conn.execute("SELECT COUNT(*) FROM accounts").fetchone()[0]
     assert count == 0
+
+
+def test_delete_removes_row_and_keychain_entry(tmp_path):
+    conn = _conn(tmp_path)
+    accounts.create_account(conn, "client-a", "key-1")
+
+    accounts.delete_account(conn, "client-a")
+
+    count = conn.execute("SELECT COUNT(*) FROM accounts").fetchone()[0]
+    assert count == 0
+    assert accounts.get_api_key("client-a") is None
+
+
+def test_delete_tolerates_missing_keychain_entry(tmp_path, fake_keyring):
+    conn = _conn(tmp_path)
+    accounts.create_account(conn, "client-a", "key-1")
+    fake_keyring._store.clear()  # simulate manually cleaned keychain
+
+    accounts.delete_account(conn, "client-a")
+
+    count = conn.execute("SELECT COUNT(*) FROM accounts").fetchone()[0]
+    assert count == 0
+
+
+def test_delete_unknown_name_raises(tmp_path):
+    conn = _conn(tmp_path)
+
+    with pytest.raises(accounts.AccountNotFoundError):
+        accounts.delete_account(conn, "nope")
+
+
+def test_list_accounts_returns_metadata_without_keys(tmp_path):
+    conn = _conn(tmp_path)
+    accounts.create_account(conn, "client-b", "key-b")
+    accounts.create_account(conn, "client-a", "key-a")
+
+    result = accounts.list_accounts(conn)
+
+    assert [entry["name"] for entry in result] == ["client-a", "client-b"]
+    for entry in result:
+        assert set(entry) == {"id", "name", "created_at"}
