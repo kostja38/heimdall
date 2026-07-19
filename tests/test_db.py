@@ -1,5 +1,7 @@
 import sqlite3
 
+import pytest
+
 from backend import db
 
 
@@ -76,3 +78,14 @@ def test_reconnect_does_not_rerun_migrations(tmp_path):
 
     version = conn.execute("PRAGMA user_version").fetchone()[0]
     assert version == len(db.MIGRATIONS)
+
+
+def test_newer_schema_version_raises(tmp_path):
+    db_file = tmp_path / "heimdall.db"
+    raw = sqlite3.connect(db_file)
+    raw.execute("PRAGMA user_version = 999")
+    raw.commit()
+    raw.close()
+
+    with pytest.raises(db.SchemaVersionError, match="999"):
+        db.connect(db_file)

@@ -26,6 +26,10 @@ MIGRATIONS: list[str] = [
 ]
 
 
+class SchemaVersionError(RuntimeError):
+    """Database schema is newer than this Heimdall version supports."""
+
+
 def resolve_db_path(path=None) -> Path:
     """Resolve the DB location: explicit argument > HEIMDALL_DB env var > default."""
     if path is not None:
@@ -49,6 +53,11 @@ def connect(path=None) -> sqlite3.Connection:
 def _migrate(conn: sqlite3.Connection) -> None:
     """Apply pending migrations, tracked via PRAGMA user_version."""
     version = conn.execute("PRAGMA user_version").fetchone()[0]
+    if version > len(MIGRATIONS):
+        raise SchemaVersionError(
+            f"database schema version {version} is newer than supported "
+            f"({len(MIGRATIONS)}); upgrade Heimdall"
+        )
     for index in range(version, len(MIGRATIONS)):
         conn.executescript(MIGRATIONS[index])
         # PRAGMA cannot be parameterized; index is a trusted int.
