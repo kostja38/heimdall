@@ -37,12 +37,20 @@ def resolve_db_path(path=None) -> Path:
 
 
 def connect(path=None) -> sqlite3.Connection:
-    """Open the Heimdall database, creating schema as needed."""
+    """Open the Heimdall database, creating or upgrading schema as needed."""
     db_path = resolve_db_path(path)
     db_path.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(db_path)
     conn.execute("PRAGMA foreign_keys = ON")
-    for script in MIGRATIONS:
-        conn.executescript(script)
-    conn.commit()
+    _migrate(conn)
     return conn
+
+
+def _migrate(conn: sqlite3.Connection) -> None:
+    """Apply pending migrations, tracked via PRAGMA user_version."""
+    version = conn.execute("PRAGMA user_version").fetchone()[0]
+    for index in range(version, len(MIGRATIONS)):
+        conn.executescript(MIGRATIONS[index])
+        # PRAGMA cannot be parameterized; index is a trusted int.
+        conn.execute(f"PRAGMA user_version = {index + 1}")
+    conn.commit()

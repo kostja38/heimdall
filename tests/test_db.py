@@ -66,3 +66,13 @@ def test_connect_uses_env_var_when_no_argument(tmp_path, monkeypatch):
     db.connect()
 
     assert (tmp_path / "env.db").exists()
+
+
+def test_reconnect_does_not_rerun_migrations(tmp_path):
+    db_file = tmp_path / "heimdall.db"
+
+    db.connect(db_file).close()
+    conn = db.connect(db_file)  # naive impl raises "table already exists"
+
+    version = conn.execute("PRAGMA user_version").fetchone()[0]
+    assert version == len(db.MIGRATIONS)
