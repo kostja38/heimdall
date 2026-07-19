@@ -89,3 +89,29 @@ def test_newer_schema_version_raises(tmp_path):
 
     with pytest.raises(db.SchemaVersionError, match="999"):
         db.connect(db_file)
+
+
+def test_connect_creates_accounts_schema(tmp_path):
+    conn = _connect(tmp_path)
+
+    columns = {row[1] for row in conn.execute("PRAGMA table_info(accounts)")}
+
+    assert columns == {"id", "name", "created_at"}
+
+
+def test_v1_database_upgrades_to_v2(tmp_path):
+    db_file = tmp_path / "heimdall.db"
+    raw = sqlite3.connect(db_file)
+    raw.executescript(db.MIGRATIONS[0])
+    raw.execute("PRAGMA user_version = 1")
+    raw.commit()
+    raw.close()
+
+    conn = db.connect(db_file)
+
+    tables = {
+        row[0]
+        for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
+    }
+    assert "accounts" in tables
+    assert conn.execute("PRAGMA user_version").fetchone()[0] == 2

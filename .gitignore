@@ -224,3 +224,4 @@ node_modules/
 .DS_Store
 # Private Arbeitsnotizen (nicht veröffentlichen)
 PROJECT.md
+docs/
