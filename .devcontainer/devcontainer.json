@@ -1,0 +1,49 @@
+{
+  // Heimdall devcontainer — backend-only (Python), JetBrains-focused.
+  // See .devcontainer/README.md for setup instructions and rationale.
+  "name": "Heimdall (Python 3.14)",
+
+  // Matches CI (setup-python@v5 uses 3.14). Prebuilt image, no custom
+  // Dockerfile needed. Image user: "vscode".
+  "image": "mcr.microsoft.com/devcontainers/python:3.14-bookworm",
+
+  // Features:
+  // - claude-code: installs the Claude Code CLI into the container so you can
+  //   run it *inside* the sandbox (see README: --dangerously-skip-permissions).
+  // - node: runtime the Claude CLI needs. NOT the frontend toolchain — that
+  //   stays out until frontend/ starts. Remove if claude-code pulls Node itself.
+  "features": {
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {},
+    "ghcr.io/devcontainers/features/node:1": {}
+  },
+
+  // Runtime + dev deps (pytest, httpx, ruff) into system site-packages.
+  // No .venv inside the container — interpreter is /usr/local/bin/python.
+  "postCreateCommand": "pip install -e \".[dev]\"",
+
+  // Two mounts, two purposes:
+  // 1. Host Claude logs, read-only, so *Heimdall* can parse them.
+  //    The parser honors HEIMDALL_CLAUDE_LOGS (backend/claude_logs.py).
+  //    Only projects/ — not all of ~/.claude (credentials).
+  // 2. A named volume for the *in-container Claude CLI's* own config/login,
+  //    so your auth survives container rebuilds. Separate from the host login.
+  "mounts": [
+    "source=${localEnv:HOME}/.claude/projects,target=/host-claude-logs,type=bind,readonly",
+    "source=heimdall-claude-config,target=/home/vscode/.claude,type=volume"
+  ],
+  "containerEnv": {
+    "HEIMDALL_CLAUDE_LOGS": "/host-claude-logs"
+  },
+
+  // Uvicorn default port (uvicorn backend.main:app --reload). No auto-start.
+  "forwardPorts": [8000],
+
+  // JetBrains opens the container via Gateway / Remote Development.
+  // Backend IDE = PyCharm; Ruff plugin preinstalled.
+  "customizations": {
+    "jetbrains": {
+      "backend": "PyCharm",
+      "plugins": ["com.koxudaxi.ruff"]
+    }
+  }
+}
