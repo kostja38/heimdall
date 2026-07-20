@@ -1,4 +1,5 @@
 import sqlite3
+import threading
 
 import pytest
 
@@ -7,6 +8,30 @@ from backend import db
 
 def _connect(tmp_path):
     return db.connect(tmp_path / "heimdall.db")
+
+
+def test_connect_allows_use_from_a_different_thread(tmp_path):
+    # FastAPI's get_conn dependency (a sync generator) can run its setup and
+    # the endpoint body that uses the yielded connection in different
+    # threadpool threads. sqlite3's default check_same_thread=True raises
+    # ProgrammingError in that case, which surfaced as a real 500 once the
+    # dashboard started firing concurrent requests. Reproduce directly
+    # rather than relying on FastAPI's nondeterministic thread assignment.
+    conn = _connect(tmp_path)
+    errors = []
+
+    def use_from_other_thread():
+        try:
+            conn.execute("SELECT 1").fetchall()
+        except sqlite3.ProgrammingError as exc:
+            errors.append(exc)
+
+    thread = threading.Thread(target=use_from_other_thread)
+    thread.start()
+    thread.join()
+
+    assert not errors
+    conn.close()
 
 
 def test_connect_creates_usage_events_schema(tmp_path):

@@ -51,7 +51,11 @@ def connect(path=None) -> sqlite3.Connection:
     """Open the Heimdall database, creating or upgrading schema as needed."""
     db_path = resolve_db_path(path)
     db_path.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(db_path)
+    # check_same_thread=False: FastAPI's sync get_conn dependency can create
+    # this connection in one threadpool thread and have the endpoint use it
+    # in another. Each connection is still request-scoped and used
+    # sequentially, never concurrently, so this is safe.
+    conn = sqlite3.connect(db_path, check_same_thread=False)
     conn.execute("PRAGMA foreign_keys = ON")
     _migrate(conn)
     return conn
