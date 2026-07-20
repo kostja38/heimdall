@@ -42,7 +42,8 @@ function ChartTooltip({ active, payload }: TooltipContentProps) {
 }
 
 interface TimelineChartProps {
-	buckets: UsageBucket[];
+	// null = not fetched yet (initial load); [] = fetched, genuinely empty.
+	buckets: UsageBucket[] | null;
 	since: string;
 	until: string;
 	loading: boolean;
@@ -56,7 +57,7 @@ export function TimelineChart({
 }: TimelineChartProps) {
 	const [showTable, setShowTable] = useState(false);
 	const series = useMemo(
-		() => buildDailySeries(buckets, since, until),
+		() => buildDailySeries(buckets ?? [], since, until),
 		[buckets, since, until],
 	);
 	const hasIncomplete = series.some((p) => p.costIncomplete);
@@ -74,75 +75,84 @@ export function TimelineChart({
 				</button>
 			</div>
 
-			{loading ? (
+			{buckets === null ? (
 				<div className="chart-card__loading">Loading usage…</div>
 			) : (
-				<ResponsiveContainer width="100%" height={260}>
-					<AreaChart
-						data={series}
-						margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
-					>
-						<CartesianGrid stroke={GRID} vertical={false} />
-						<XAxis
-							dataKey="date"
-							tickFormatter={formatAxisDate}
-							tick={{ fill: AXIS_TEXT, fontSize: 11 }}
-							axisLine={{ stroke: GRID }}
-							tickLine={false}
-							interval="preserveStartEnd"
-							minTickGap={40}
-						/>
-						<YAxis
-							tickFormatter={(v: number) => formatUsd(v)}
-							tick={{ fill: AXIS_TEXT, fontSize: 11 }}
-							axisLine={false}
-							tickLine={false}
-							width={64}
-						/>
-						<Tooltip
-							content={(props) => <ChartTooltip {...props} />}
-							cursor={{ stroke: GRID }}
-						/>
-						<Area
-							type="monotone"
-							dataKey="cost"
-							stroke={ACCENT}
-							strokeWidth={2}
-							fill={ACCENT}
-							fillOpacity={0.1}
-							connectNulls={false}
-							dot={false}
-							isAnimationActive={false}
-						/>
-					</AreaChart>
-				</ResponsiveContainer>
-			)}
+				<div
+					className={
+						loading
+							? "chart-card__body chart-card__body--refreshing"
+							: "chart-card__body"
+					}
+				>
+					<ResponsiveContainer width="100%" height={260}>
+						<AreaChart
+							data={series}
+							margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+						>
+							<CartesianGrid stroke={GRID} vertical={false} />
+							<XAxis
+								dataKey="date"
+								tickFormatter={formatAxisDate}
+								tick={{ fill: AXIS_TEXT, fontSize: 11 }}
+								axisLine={{ stroke: GRID }}
+								tickLine={false}
+								interval="preserveStartEnd"
+								minTickGap={40}
+							/>
+							<YAxis
+								tickFormatter={(v: number) => formatUsd(v)}
+								tick={{ fill: AXIS_TEXT, fontSize: 11 }}
+								axisLine={false}
+								tickLine={false}
+								width={64}
+							/>
+							<Tooltip
+								content={(props) => <ChartTooltip {...props} />}
+								cursor={{ stroke: GRID }}
+							/>
+							<Area
+								type="monotone"
+								dataKey="cost"
+								stroke={ACCENT}
+								strokeWidth={2}
+								fill={ACCENT}
+								fillOpacity={0.1}
+								connectNulls={false}
+								dot={false}
+								isAnimationActive={false}
+							/>
+						</AreaChart>
+					</ResponsiveContainer>
 
-			{showTable && (
-				<div className="chart-table-wrap">
-					<table className="chart-table">
-						<thead>
-							<tr>
-								<th>Date</th>
-								<th>Cost</th>
-							</tr>
-						</thead>
-						<tbody>
-							{series.map((point) => (
-								<tr key={point.date}>
-									<td>{formatAxisDate(point.date)}</td>
-									<td className="chart-table__number">
-										{point.cost !== null ? formatUsd(point.cost) : "—"}
-										{point.costIncomplete ? " *" : ""}
-									</td>
-								</tr>
-							))}
-						</tbody>
-					</table>
-					{hasIncomplete && (
-						<p className="chart-table__note">
-							* includes usage from an unpriced model — cost is a partial figure
-						</p>
+					{showTable && (
+						<div className="chart-table-wrap">
+							<table className="chart-table">
+								<thead>
+									<tr>
+										<th>Date</th>
+										<th>Cost</th>
+									</tr>
+								</thead>
+								<tbody>
+									{series.map((point) => (
+										<tr key={point.date}>
+											<td>{formatAxisDate(point.date)}</td>
+											<td className="chart-table__number">
+												{point.cost !== null ? formatUsd(point.cost) : "—"}
+												{point.costIncomplete ? " *" : ""}
+											</td>
+										</tr>
+									))}
+								</tbody>
+							</table>
+							{hasIncomplete && (
+								<p className="chart-table__note">
+									* includes usage from an unpriced model — cost is a partial
+									figure
+								</p>
+							)}
+						</div>
 					)}
 				</div>
 			)}

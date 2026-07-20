@@ -43,7 +43,7 @@ interface KpiRowProps {
 }
 
 export function KpiRow({ current, previous, loading }: KpiRowProps) {
-	if (loading || !current) {
+	if (!current) {
 		return (
 			<div className="kpi-row" aria-busy="true">
 				<div className="stat-tile stat-tile--loading">Loading usage…</div>
@@ -66,7 +66,10 @@ export function KpiRow({ current, previous, loading }: KpiRowProps) {
 		: null;
 
 	return (
-		<div className="kpi-row">
+		<div
+			className={loading ? "kpi-row kpi-row--refreshing" : "kpi-row"}
+			aria-busy={loading}
+		>
 			<StatTile
 				label="Total cost"
 				value={current.cost_usd !== null ? formatUsd(current.cost_usd) : "—"}

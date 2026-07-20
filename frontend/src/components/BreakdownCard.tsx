@@ -12,12 +12,13 @@ function sortByCostDesc(buckets: UsageBucket[]): UsageBucket[] {
 
 interface BreakdownCardProps {
 	title: string;
-	buckets: UsageBucket[];
+	// null = not fetched yet (initial load); [] = fetched, genuinely empty.
+	buckets: UsageBucket[] | null;
 	loading: boolean;
 }
 
 export function BreakdownCard({ title, buckets, loading }: BreakdownCardProps) {
-	const rows = sortByCostDesc(buckets);
+	const rows = sortByCostDesc(buckets ?? []);
 	const maxCost = Math.max(0, ...rows.map((r) => r.cost_usd ?? 0));
 
 	return (
@@ -26,12 +27,18 @@ export function BreakdownCard({ title, buckets, loading }: BreakdownCardProps) {
 				<h2>{title}</h2>
 			</div>
 
-			{loading ? (
+			{buckets === null ? (
 				<div className="chart-card__loading">Loading usage…</div>
 			) : rows.length === 0 ? (
 				<div className="chart-card__loading">No usage in this period</div>
 			) : (
-				<ul className="breakdown-list">
+				<ul
+					className={
+						loading
+							? "breakdown-list breakdown-list--refreshing"
+							: "breakdown-list"
+					}
+				>
 					{rows.map((row) => (
 						<li key={row.key} className="breakdown-row">
 							<div className="breakdown-row__label" title={row.key}>

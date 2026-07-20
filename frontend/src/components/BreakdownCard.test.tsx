@@ -21,9 +21,23 @@ function bucket(
 	};
 }
 
-it("shows a loading state", () => {
-	render(<BreakdownCard title="By model" buckets={[]} loading={true} />);
+it("shows a loading state before any data has arrived", () => {
+	render(<BreakdownCard title="By model" buckets={null} loading={true} />);
 	expect(screen.getByText("Loading usage…")).toBeInTheDocument();
+});
+
+it("keeps showing rows (dimmed) instead of a loading placeholder during a refetch", () => {
+	render(
+		<BreakdownCard
+			title="By model"
+			buckets={[bucket("claude-opus", 50)]}
+			loading={true}
+		/>,
+	);
+	expect(screen.queryByText("Loading usage…")).not.toBeInTheDocument();
+	expect(screen.getByText("claude-opus").closest("ul")).toHaveClass(
+		"breakdown-list--refreshing",
+	);
 });
 
 it("shows an empty state when there is no usage", () => {

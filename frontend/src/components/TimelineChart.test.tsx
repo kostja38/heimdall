@@ -23,13 +23,29 @@ function bucket(
 it("shows a loading state before any data has arrived", () => {
 	render(
 		<TimelineChart
-			buckets={[]}
+			buckets={null}
 			since="2026-07-18T00:00:00Z"
 			until="2026-07-20T00:00:00Z"
 			loading={true}
 		/>,
 	);
 	expect(screen.getByText("Loading usage…")).toBeInTheDocument();
+});
+
+it("keeps showing the chart (dimmed) instead of a loading placeholder during a refetch", () => {
+	render(
+		<TimelineChart
+			buckets={[bucket("2026-07-18", 5)]}
+			since="2026-07-18T00:00:00Z"
+			until="2026-07-18T00:00:00Z"
+			loading={true}
+		/>,
+	);
+	expect(screen.queryByText("Loading usage…")).not.toBeInTheDocument();
+	fireEvent.click(screen.getByText("View as table"));
+	expect(screen.getByRole("table").closest(".chart-card__body")).toHaveClass(
+		"chart-card__body--refreshing",
+	);
 });
 
 it("toggles a table view listing every filled day", () => {
