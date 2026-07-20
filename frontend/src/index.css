@@ -418,3 +418,113 @@ body {
 	opacity: 0.6;
 	transition: opacity 0.15s ease;
 }
+
+.accounts-card {
+	padding: 24px 28px;
+}
+
+.accounts-list {
+	list-style: none;
+	margin: 0 0 20px;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.accounts-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 10px 0;
+	border-bottom: 1px solid var(--glass-border);
+}
+
+.accounts-row:last-child {
+	border-bottom: none;
+}
+
+.accounts-row__label {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	font-size: 14px;
+}
+
+.accounts-row__created {
+	font-size: 12px;
+	color: var(--text-muted);
+}
+
+.accounts-row__delete {
+	background: transparent;
+	border: 1px solid var(--glass-border);
+	border-radius: 8px;
+	color: var(--text-muted);
+	font-size: 12px;
+	padding: 5px 12px;
+	cursor: pointer;
+	flex: none;
+}
+
+.accounts-row__delete:hover {
+	border-color: var(--error);
+	color: var(--error);
+}
+
+.accounts-form {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: 12px;
+	padding-top: 16px;
+	border-top: 1px solid var(--glass-border);
+}
+
+.accounts-form__field {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.accounts-form__field label {
+	font-size: 12px;
+	color: var(--text-muted);
+}
+
+.accounts-form__field input {
+	background: rgba(255, 255, 255, 0.03);
+	border: 1px solid var(--glass-border);
+	border-radius: 8px;
+	color: var(--text);
+	font: inherit;
+	padding: 8px 12px;
+	min-width: 220px;
+}
+
+.accounts-form__field input:focus {
+	outline: none;
+	border-color: var(--accent);
+}
+
+.accounts-form button[type="submit"] {
+	background: var(--accent);
+	border: none;
+	border-radius: 8px;
+	color: #16100c;
+	font-size: 13px;
+	font-weight: 600;
+	padding: 9px 18px;
+	cursor: pointer;
+}
+
+.accounts-form button[type="submit"]:disabled {
+	opacity: 0.6;
+	cursor: default;
+}
+
+.accounts-form__error {
+	color: var(--error);
+	font-size: 12px;
+	width: 100%;
+}

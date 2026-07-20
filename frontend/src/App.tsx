@@ -1,3 +1,4 @@
+import { AccountsCard } from "./components/AccountsCard";
 import { Dashboard } from "./components/Dashboard";
 import { type BackendStatus, useBackendStatus } from "./hooks/useBackendStatus";
 
@@ -20,6 +21,7 @@ function App() {
 				</div>
 			</header>
 			<Dashboard />
+			<AccountsCard />
 		</div>
 	);
 }
