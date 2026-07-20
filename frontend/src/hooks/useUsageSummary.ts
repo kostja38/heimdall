@@ -11,14 +11,17 @@ interface UsageSummaryState {
 	error: string | null;
 }
 
+/** `enabled: false` skips fetching entirely (e.g. no meaningful previous
+ * period to compare against for the "all" time range). */
 export function useUsageSummary(
 	since: string,
 	until: string,
 	groupBy: GroupBy,
+	enabled = true,
 ) {
 	const [state, setState] = useState<UsageSummaryState>({
 		data: null,
-		loading: true,
+		loading: enabled,
 		error: null,
 	});
 
@@ -41,10 +44,14 @@ export function useUsageSummary(
 	);
 
 	useEffect(() => {
+		if (!enabled) {
+			setState({ data: null, loading: false, error: null });
+			return;
+		}
 		const controller = new AbortController();
 		fetchSummary(controller.signal);
 		return () => controller.abort();
-	}, [fetchSummary]);
+	}, [fetchSummary, enabled]);
 
 	return { ...state, refetch: () => fetchSummary() };
 }

@@ -84,3 +84,21 @@ it("refetch triggers a new request", async () => {
 	result.current.refetch();
 	await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
 });
+
+it("skips fetching when disabled", async () => {
+	const fetchMock = vi.fn();
+	vi.stubGlobal("fetch", fetchMock);
+
+	const { result } = renderHook(() =>
+		useUsageSummary(
+			"2026-07-01T00:00:00Z",
+			"2026-07-20T00:00:00Z",
+			"day",
+			false,
+		),
+	);
+
+	expect(result.current.loading).toBe(false);
+	expect(result.current.data).toBeNull();
+	expect(fetchMock).not.toHaveBeenCalled();
+});
