@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useUsageSummary } from "../hooks/useUsageSummary";
 import { currentRange, previousRange } from "../lib/period";
+import { BreakdownCard } from "./BreakdownCard";
 import { KpiRow } from "./KpiRow";
 import { TimelineChart } from "./TimelineChart";
 
@@ -18,6 +19,8 @@ export function Dashboard() {
 		"day",
 		prevRange !== null,
 	);
+	const byModel = useUsageSummary(range.since, range.until, "model");
+	const byProject = useUsageSummary(range.since, range.until, "project");
 
 	return (
 		<div className="dashboard">
@@ -32,6 +35,18 @@ export function Dashboard() {
 				until={range.until}
 				loading={current.loading}
 			/>
+			<div className="breakdown-grid">
+				<BreakdownCard
+					title="By model"
+					buckets={byModel.data?.buckets ?? []}
+					loading={byModel.loading}
+				/>
+				<BreakdownCard
+					title="By project"
+					buckets={byProject.data?.buckets ?? []}
+					loading={byProject.loading}
+				/>
+			</div>
 		</div>
 	);
 }

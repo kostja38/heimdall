@@ -242,3 +242,87 @@ body {
 	font-size: 12px;
 	margin: 8px 0 0;
 }
+
+.breakdown-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+	gap: 16px;
+}
+
+.breakdown-card {
+	padding: 24px 28px;
+}
+
+.breakdown-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	max-height: 420px;
+	overflow-y: auto;
+}
+
+.breakdown-row {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 96px;
+	grid-template-areas: "label figures" "bar figures";
+	column-gap: 12px;
+	row-gap: 4px;
+	align-items: center;
+}
+
+.breakdown-row__label {
+	grid-area: label;
+	font-size: 13px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.breakdown-row__badge {
+	flex: none;
+	font-size: 11px;
+	color: var(--error);
+	border: 1px solid var(--error);
+	border-radius: 999px;
+	padding: 0 6px;
+}
+
+.breakdown-row__bar-track {
+	grid-area: bar;
+	background: rgba(255, 255, 255, 0.05);
+	border-radius: 4px;
+	height: 6px;
+	overflow: hidden;
+}
+
+.breakdown-row__bar {
+	background: var(--accent);
+	opacity: 0.6;
+	height: 100%;
+	border-radius: 4px;
+}
+
+.breakdown-row__figures {
+	grid-area: figures;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	text-align: right;
+}
+
+.breakdown-row__cost {
+	font-variant-numeric: tabular-nums;
+	font-weight: 600;
+}
+
+.breakdown-row__tokens {
+	font-size: 11px;
+	color: var(--text-muted);
+	white-space: nowrap;
+}
