@@ -1,6 +1,6 @@
 import json
 
-from backend import claude_logs
+from backend import claude_logs, db
 
 
 def _assistant_entry(**overrides):
@@ -119,3 +119,44 @@ def test_resolve_log_root_precedence(tmp_path, monkeypatch):
 
     monkeypatch.delenv("HEIMDALL_CLAUDE_LOGS")
     assert claude_logs.resolve_log_root(None) == claude_logs.DEFAULT_LOG_ROOT
+
+
+def test_import_usage_inserts_events_and_reports_stats(tmp_path):
+    conn = db.connect(tmp_path / "heimdall.db")
+    _write_jsonl(
+        tmp_path / "logs" / "p" / "s.jsonl",
+        [_assistant_entry(uuid="u-1"), _assistant_entry(uuid="u-2")],
+    )
+
+    stats = claude_logs.import_usage(conn, tmp_path / "logs")
+
+    assert stats.inserted == 2
+    assert stats.skipped == 0
+    rows = conn.execute(
+        "SELECT uuid, model, input_tokens FROM usage_events ORDER BY uuid"
+    ).fetchall()
+    assert rows == [
+        ("u-1", "claude-opus-4-8", 100),
+        ("u-2", "claude-opus-4-8", 100),
+    ]
+
+
+def test_import_usage_is_idempotent_on_reimport(tmp_path):
+    conn = db.connect(tmp_path / "heimdall.db")
+    _write_jsonl(tmp_path / "logs" / "p" / "s.jsonl", [_assistant_entry(uuid="u-1")])
+
+    first = claude_logs.import_usage(conn, tmp_path / "logs")
+    second = claude_logs.import_usage(conn, tmp_path / "logs")
+
+    assert (first.inserted, first.skipped) == (1, 0)
+    assert (second.inserted, second.skipped) == (0, 1)
+    count = conn.execute("SELECT COUNT(*) FROM usage_events").fetchone()[0]
+    assert count == 1
+
+
+def test_import_usage_with_empty_root_returns_zero_stats(tmp_path):
+    conn = db.connect(tmp_path / "heimdall.db")
+
+    stats = claude_logs.import_usage(conn, tmp_path / "nothing-here")
+
+    assert (stats.inserted, stats.skipped) == (0, 0)

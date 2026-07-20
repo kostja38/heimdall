@@ -3,6 +3,7 @@
 import json
 import os
 from collections.abc import Iterator
+from dataclasses import dataclass
 from pathlib import Path
 
 DEFAULT_LOG_ROOT = Path.home() / ".claude" / "projects"
@@ -60,3 +61,32 @@ def iter_usage_events(root=None) -> Iterator[dict]:
                 event = parse_entry(raw)
                 if event is not None:
                     yield event
+
+
+@dataclass
+class ImportStats:
+    inserted: int = 0
+    skipped: int = 0  # already-imported duplicates
+
+
+_INSERT_SQL = """
+INSERT OR IGNORE INTO usage_events
+    (uuid, timestamp, model, input_tokens, output_tokens,
+     cache_creation_tokens, cache_read_tokens, session_id, project)
+VALUES
+    (:uuid, :timestamp, :model, :input_tokens, :output_tokens,
+     :cache_creation_tokens, :cache_read_tokens, :session_id, :project)
+"""
+
+
+def import_usage(conn, root=None) -> ImportStats:
+    """Import all usage events under the log root. Re-imports are no-ops."""
+    stats = ImportStats()
+    for event in iter_usage_events(root):
+        cursor = conn.execute(_INSERT_SQL, event)
+        if cursor.rowcount:
+            stats.inserted += 1
+        else:
+            stats.skipped += 1
+    conn.commit()
+    return stats
