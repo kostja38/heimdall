@@ -1,0 +1,81 @@
+:root {
+	--bg: #0b0b0f;
+	--text: #e5e4e7;
+	--text-muted: #9ca3af;
+	--accent: #d97757;
+	--glass-bg: rgba(255, 255, 255, 0.04);
+	--glass-border: rgba(255, 255, 255, 0.08);
+	--ok: #4ade80;
+	--error: #f87171;
+
+	--sans:
+		-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto,
+		sans-serif;
+
+	color-scheme: dark;
+	color: var(--text);
+	background: var(--bg);
+	font: 16px / 1.5 var(--sans);
+	font-synthesis: none;
+	text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	min-height: 100vh;
+}
+
+#root {
+	min-height: 100vh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 24px;
+}
+
+.glass-card {
+	background: var(--glass-bg);
+	border: 1px solid var(--glass-border);
+	border-radius: 20px;
+	backdrop-filter: blur(20px);
+	-webkit-backdrop-filter: blur(20px);
+	padding: 32px 40px;
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.glass-card h1 {
+	margin: 0 0 16px;
+	font-size: 28px;
+	font-weight: 600;
+	color: var(--accent);
+}
+
+.status-row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	color: var(--text-muted);
+}
+
+.status-dot {
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	background: var(--text-muted);
+}
+
+.status-dot--online {
+	background: var(--ok);
+	box-shadow: 0 0 8px var(--ok);
+}
+
+.status-dot--offline {
+	background: var(--error);
+	box-shadow: 0 0 8px var(--error);
+}
