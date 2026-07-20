@@ -5,8 +5,9 @@ from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 
 from fastapi import Depends, FastAPI, HTTPException
+from pydantic import BaseModel
 
-from backend import claude_logs, db, usage
+from backend import accounts, claude_logs, db, usage
 
 app = FastAPI(
     title="Heimdall",
@@ -61,3 +62,37 @@ def post_import_logs(conn: sqlite3.Connection = Depends(get_conn)) -> dict[str, 
     """Import usage events from local Claude Code logs. Re-imports are safe."""
     stats = claude_logs.import_usage(conn)
     return {"inserted": stats.inserted, "skipped": stats.skipped}
+
+
+class CreateAccountRequest(BaseModel):
+    name: str
+    api_key: str
+
+
+@app.get("/api/accounts")
+def get_accounts(conn: sqlite3.Connection = Depends(get_conn)) -> list[dict]:
+    """List accounts. Never includes key material."""
+    return accounts.list_accounts(conn)
+
+
+@app.post("/api/accounts", status_code=201)
+def post_accounts(
+    body: CreateAccountRequest, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict:
+    """Create an account; the key is stored in the OS keychain, never echoed."""
+    try:
+        account_id = accounts.create_account(conn, body.name, body.api_key)
+    except accounts.DuplicateAccountError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return next(a for a in accounts.list_accounts(conn) if a["id"] == account_id)
+
+
+@app.delete("/api/accounts/{name}", status_code=204)
+def delete_account(name: str, conn: sqlite3.Connection = Depends(get_conn)) -> None:
+    """Delete an account row and its keychain entry."""
+    try:
+        accounts.delete_account(conn, name)
+    except accounts.AccountNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
